@@ -88,13 +88,40 @@ def makeList():
 def clearList():
     listbox.selection_clear(0, END)
 
+def myTest():
+    print("test")
 
-def doStats():
-    fig, ax = plt.subplots()
-    df = pd.DataFrame(np.random.randn(10, 4), columns=list('ABCD'))
-    ax.table(cellText=df.values, colLabels=df.columns, loc='center')
-    fig.tight_layout()
-    plt.show() 
+myTestValues = ["DMSO_L1", "1uM_L1", "5uM_L1", "10uM_L1", "15uM_L1", "20uM_L1", "30uM_L1", "50uM_L1"]
+
+def doStats(values = myTestValues):
+    #fig, ax = plt.subplots()
+    #df = pd.DataFrame(np.random.randn(10, 4), columns=list('ABCD'))
+    #ax.table(cellText=df.values, colLabels=df.columns, loc='center')
+    #fig.tight_layout()
+    #plt.show()
+
+    #here we pass in the array of values which is all the L1, for instance
+
+    df = pd.DataFrame(columns=values)
+
+    for idx in values:
+         statRowArray = []
+         x = myData.loc[:,idx].dropna()
+         for indx in values:
+             y = myData.loc[:,indx].dropna()
+             pvalue = scipy.stats.ttest_ind(x, y)[1]
+             pvalue_round = round(pvalue, 5)
+             statRowArray.append(pvalue_round)
+         df.loc[len(df)] = statRowArray
+    print(df)
+
+
+                 #myString = idx + " vs " + indx + "                      "+ str(round(scipy.stats.ks_2samp(x, y)[1], 5)) + "\n"
+             #myString = str(idx) + " vs " + str(indx) + "                      " + str(pvalue_round) + "\n"
+
+                 #T.insert(END, myString)
+            #print(idx + " vs " + indx + "                      "+ str(round(scipy.stats.ks_2samp(x, y)[1], 5)))
+
 
     # statwin = Toplevel(root)
     # display = Label(statwin, text="Statistics")
@@ -176,9 +203,11 @@ def MegaAnalyze(colnames):
         for nm in Neuromast_List:
             if "L" + str(i) in nm:
                 myPlots.append(nm)
-        myFig, ax = makeKDEPlot(myPlots)
-        if ax.lines:
-            myFig.savefig("L" + str(i) + ".pdf")
+        #myFig, ax = makeKDEPlot(myPlots)
+        #if ax.lines:
+        #    myFig.savefig("L" + str(i) + ".pdf")
+        #doStats(myPlots)
+        print(myPlots)
 
     #get the terminal neuromasts
     terminal_array = []
@@ -188,6 +217,9 @@ def MegaAnalyze(colnames):
     if ax.lines:
         myFig.savefig("TNM.pdf")
 
+
+
+    #
 #TODO: add a table with statistics
 #TODO: distance between nm for each condition
     merge_PDF()
@@ -264,6 +296,8 @@ b_clear.pack()
 b_test = Button(text="Mega Analysis!", command = lambda arg = colNames : MegaAnalyze(colNames))
 b_test.pack()
 
+b_clear = Button(text="Test", command = myTest)
+b_clear.pack()
 
 
 # Create a Tkinter variable
