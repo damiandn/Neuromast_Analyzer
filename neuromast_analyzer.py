@@ -1,6 +1,9 @@
 
 #TODO: Plot limits
-#TODO: Mega Analyze
+#TODO: get average distance between each nm and plot it
+#TODO: get total number of neuromasts and plot them
+
+
 
 
 #imports
@@ -123,18 +126,14 @@ def merge_PDF():
 
 def MegaAnalyze(colnames):
 
-
     time = dt.datetime.now();
     timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
-
     path = (os.getcwd())
     os.mkdir(path + "\\output_" + timestamp)
-
     savePath = path + "\\output_" + timestamp
     os.chdir(savePath)
 
     myMatrix, nameArray = getConditions(colnames)
-
 
     #get each condition as an individual plots
     for idx, name in enumerate(nameArray):
@@ -145,7 +144,6 @@ def MegaAnalyze(colnames):
         myFig, ax = makeKDEPlot(conditionArray)
         if ax.lines:
             myFig.savefig(str(idx) + name +".pdf")
-
 
     # find the longest lists
     maxListSize = 0;
@@ -162,7 +160,6 @@ def MegaAnalyze(colnames):
             if current_nm in lists:
                 Neuromast_List.append(lists[0] + "_" + current_nm)
 
-
     #make plots for each inidividual neuromast
     for i in range (1, maxListSize-1):
         myPlots = []
@@ -176,7 +173,6 @@ def MegaAnalyze(colnames):
             statPlot.savefig("L" + str(i) + "_stats.pdf")
         print(myPlots)
 
-
     #get the terminal neuromasts
     terminal_array = []
     for condition in nameArray:
@@ -187,16 +183,23 @@ def MegaAnalyze(colnames):
         statPlot = doStats(myPlots)
         statPlot.savefig("TNM_stats.pdf")
 
-
     merge_PDF()
 
 
 
+def countNM():
+    print("counting neuromasts!")
 
-    #get average distance between each nm and plot it
-    #get total number of neuromasts and plot them
 
+https://stackoverflow.com/questions/40583482/getting-last-non-na-value-across-rows-in-a-pandas-dataframe
 
+# def f(x):
+#     if x.last_valid_index() is None:
+#         return np.nan
+#     else:
+#         return x[x.last_valid_index()]  ####except here we're returning the index value (L1, L2, L3) From there we'll extract the number as the count
+#
+# df['status'] = df.apply(f, axis=1)
 
 
 
@@ -235,6 +238,8 @@ mainframe.pack(pady = 0, padx = 0)
 root.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
 myData = pd.read_csv(root.filename, encoding='utf-8-sig')
 colNames = myData.columns.tolist()
+
+
 
 
 b_quit = Button(root, text="Quit", command=quitUI)
