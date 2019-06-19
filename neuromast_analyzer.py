@@ -54,10 +54,9 @@ def makeKDEPlot(dataArray, cols = colorArray, lines = lineStyleArray):
         if len(myData[idx].dropna()) < 3:
             continue;
         else:
-            sns.kdeplot(myData[idx].dropna().astype(int), bw=100, color=col, label=idx, linestyle=line, lw=3)
+            sns.kdeplot(myData[idx].dropna(), bw=100, color=col, label=idx, linestyle=line, lw=3)
             plt.xlim(0, 2500)
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-
     return f, ax
 
 def quitUI():
@@ -83,9 +82,8 @@ def clearList():
 def myTest():
     print("test")
 
-myTestValues = ["DMSO_L1", "1uM_L1", "5uM_L1", "10uM_L1", "15uM_L1", "20uM_L1", "30uM_L1", "50uM_L1"]
 
-def doStats(values = myTestValues):
+def doStats(values):
     df = pd.DataFrame(columns=values)
     df.set_index(values)
     print(type(df.index))
@@ -135,22 +133,29 @@ def MegaAnalyze(colnames):
 
     myMatrix, nameArray = getConditions(colnames)
 
-    #get each condition as an individual plots
-    for idx, name in enumerate(nameArray):
-        conditionArray = []
+    #get each condition as an individual plots (this is wrong because it will find 15uM when looking for 5uM and append both)
+
+    #lets instead make a dataframe for each condition and use that to print. C
+
+    #print(colnames)
+    for idx, condition in enumerate(nameArray):
+        myList = []
         for colname in colnames:
-            if name in colname:
-                conditionArray.append(colname)
-        myFig, ax = makeKDEPlot(conditionArray)
+            if colname.split('_')[0] == condition:
+                myList.append(colname)
+        print(myList)
+        myFig, ax = makeKDEPlot(myList)
         if ax.lines:
-            myFig.savefig(str(idx) + name +".pdf")
+            myFig.savefig(str(idx) + condition +".pdf")
+
+
 
     # find the longest lists
     maxListSize = 0;
     for list in myMatrix:
         if len(list) > maxListSize:
             maxListSize = len(list)
-    print("max list length is " + str(maxListSize) + " which is " + str(maxListSize-2) + " neuromasts")
+    #print("max list length is " + str(maxListSize) + " which is " + str(maxListSize-2) + " neuromasts")
 
     #make a matrx of all neuromasts for each condition
     Neuromast_List = []
@@ -167,39 +172,42 @@ def MegaAnalyze(colnames):
             if "L" + str(i) in nm:
                 myPlots.append(nm)
         myFig, ax = makeKDEPlot(myPlots)
-        if ax.lines:
-            myFig.savefig("L" + str(i) + ".pdf")
-            statPlot = doStats(myPlots)
-            statPlot.savefig("L" + str(i) + "_stats.pdf")
-        print(myPlots)
+#        if ax.lines:
+#            myFig.savefig("L" + str(i) + ".pdf")
+#            statPlot = doStats(myPlots)
+#            statPlot.savefig("L" + str(i) + "_stats.pdf")
+#        print(myPlots)
 
     #get the terminal neuromasts
     terminal_array = []
     for condition in nameArray:
         terminal_array.append(condition + "_TNM")
     myFig, ax = makeKDEPlot(terminal_array)
-    if ax.lines:
-        myFig.savefig("TNM.pdf")
-        statPlot = doStats(myPlots)
-        statPlot.savefig("TNM_stats.pdf")
+    #if ax.lines:
+    #    myFig.savefig("TNM.pdf")
+#        statPlot = doStats(myPlots)
+#        statPlot.savefig("TNM_stats.pdf")
 
-    merge_PDF()
-
-
-
-def countNM():
-    print("counting neuromasts!")
+#    merge_PDF()
 
 
-https://stackoverflow.com/questions/40583482/getting-last-non-na-value-across-rows-in-a-pandas-dataframe
 
-# def f(x):
-#     if x.last_valid_index() is None:
-#         return np.nan
-#     else:
-#         return x[x.last_valid_index()]  ####except here we're returning the index value (L1, L2, L3) From there we'll extract the number as the count
-#
-# df['status'] = df.apply(f, axis=1)
+
+
+
+#colnames = ["DMSO_L1", "DMSO_L2", "DMSO_L3", "DMSO_L4", "DMSO_L5", "DMSO_L6", "DMSO_L7"]
+
+def countNM(colnames):
+    df2 = pd.DataFrame()
+    for name in colnames:
+        df2[name] = myData[name]
+    print(df2)
+
+    return (df2.count(axis=1))
+    #df2['number'] = (df2.count(axis=1))
+    #print(df2)
+
+
 
 
 
@@ -235,8 +243,11 @@ mainframe.columnconfigure(0, weight = 1)
 mainframe.rowconfigure(0, weight = 1)
 mainframe.pack(pady = 0, padx = 0)
 
-root.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
-myData = pd.read_csv(root.filename, encoding='utf-8-sig')
+#root.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
+#myData = pd.read_csv(root.filename, encoding='utf-8-sig')
+
+myData = pd.read_csv("C:/Users/damia/github/Neuromast_Analyzer/Ck66_Compiled Data.csv")
+
 colNames = myData.columns.tolist()
 
 
@@ -257,7 +268,7 @@ b_clear.pack()
 b_test = Button(text="Mega Analysis!", command = lambda arg = colNames : MegaAnalyze(colNames))
 b_test.pack()
 
-b_clear = Button(text="Test", command = myTest)
+b_clear = Button(text="Test", command = countNM)
 b_clear.pack()
 
 
