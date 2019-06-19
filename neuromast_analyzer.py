@@ -1,6 +1,9 @@
 
 #TODO: Plot limits
-#TODO: Mega Analyze
+#TODO: get average distance between each nm and plot it
+#TODO: get total number of neuromasts and plot them
+
+
 
 
 #imports
@@ -21,6 +24,7 @@ import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg,NavigationToolbar2Tk
 from matplotlib.figure import Figure
 import glob
+import datetime as dt
 
 #DEF FUNCTIONS
 
@@ -44,20 +48,11 @@ def makeKDEPlot(dataArray, cols = colorArray, lines = lineStyleArray):
 
     plt.close()
 
-
-    #myPal = sns.color_palette(sns.color_palette(), n_colors=len(dataArray))
-
     f, ax = plt.subplots(figsize=(22, 6))
 
     for idx, col, line in zip(dataArray, cols, lines):
         if len(myData[idx].dropna()) < 3:
-
-            errorwin = Toplevel(root)
-            display = Label(errorwin, text="Insufficient data error")
-            T = Text(errorwin, height=20, width=50)
-            T.pack()
-            T.insert(END, "Insufficient Data Points (" + str(len(myData[idx].dropna())) + ") at index "  + idx + ". Need at least three data points. Skipping this column")
-            #print("Insufficient Data Points (" + str(len(myData[idx].dropna())) + ") at index "  + idx + ". Need at least three data points. Skipping this column")
+            continue;
         else:
             sns.kdeplot(myData[idx].dropna().astype(int), bw=100, color=col, label=idx, linestyle=line, lw=3)
             plt.xlim(0, 2500)
@@ -70,14 +65,11 @@ def quitUI():
     root.destroy()
 
 def makeList():
-    #canvas.get_tk_widget().delete("all")
     values = [listbox.get(idx) for idx in listbox.curselection()]
-    #print(values)
     myFig, ax = makeKDEPlot(values)
 
     newwin = Toplevel(root)
     display = Label(newwin, text="Plot")
-
 
     canvas = FigureCanvasTkAgg(myFig, master=newwin)  # A tk.DrawingArea.
     canvas.draw()
@@ -88,16 +80,15 @@ def makeList():
 def clearList():
     listbox.selection_clear(0, END)
 
+def myTest():
+    print("test")
 
-def doStats():
-    #fig, ax = plt.subplots()
-    #df = pd.DataFrame(np.random.randn(10, 4), columns=list('ABCD'))
-    #ax.table(cellText=df.values, colLabels=df.columns, loc='center')
-    #fig.tight_layout()
-    #plt.show() 
+myTestValues = ["DMSO_L1", "1uM_L1", "5uM_L1", "10uM_L1", "15uM_L1", "20uM_L1", "30uM_L1", "50uM_L1"]
 
+def doStats(values = myTestValues):
     df = pd.DataFrame(columns=values)
-
+    df.set_index(values)
+    print(type(df.index))
     for idx in values:
          statRowArray = []
          x = myData.loc[:,idx].dropna()
@@ -107,34 +98,19 @@ def doStats():
              pvalue_round = round(pvalue, 5)
              statRowArray.append(pvalue_round)
          df.loc[len(df)] = statRowArray
-    print(df)
 
-    # statwin = Toplevel(root)
-    # display = Label(statwin, text="Statistics")
-    #
-    # T = Text(statwin, height=20, width=50)
-    # T.pack()
-    #
-    # values = [listbox.get(idx) for idx in listbox.curselection()]
-    # T.insert(END, "Condition                    K-S P Value\n")
-    # T.insert(END, "------------                   ------------\n")
-    #
-    # for idx in values:
-    #     x = myData.loc[:,idx].dropna()
-    #     for indx in values:
-    #         y = myData.loc[:,indx].dropna()
-    #         if idx == indx:
-    #             continue
-    #         else:
-    #
-    #             pvalue = scipy.stats.ttest_ind(x, y)[1]
-    #             pvalue_round = round(pvalue, 5)
-    #             print(pvalue_round)
-    #             #myString = idx + " vs " + indx + "                      "+ str(round(scipy.stats.ks_2samp(x, y)[1], 5)) + "\n"
-    #             myString = str(idx) + " vs " + str(indx) + "                      " + str(pvalue_round) + "\n"
-    #
-    #             T.insert(END, myString)
-    #             #print(idx + " vs " + indx + "                      "+ str(round(scipy.stats.ks_2samp(x, y)[1], 5)))
+    df[''] = values
+    df.set_index('',inplace=True)
+
+    fig, ax = plt.subplots()
+    ax.table(cellText=df.values, colLabels=df.columns, rowLabels=df.index, loc='center')
+    ax.axes.get_xaxis().set_visible(False)
+    ax.axes.get_yaxis().set_visible(False)
+    ax.axis('off')
+
+    return fig
+
+
 
 
 def merge_PDF():
@@ -149,23 +125,25 @@ def merge_PDF():
         pdf_merger.write(fileobj)
 
 def MegaAnalyze(colnames):
-    #got a matrix
 
+    time = dt.datetime.now();
+    timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
+    path = (os.getcwd())
+    os.mkdir(path + "\\output_" + timestamp)
+    savePath = path + "\\output_" + timestamp
+    os.chdir(savePath)
 
     myMatrix, nameArray = getConditions(colnames)
 
-
     #get each condition as an individual plots
-
-    for name in nameArray:
+    for idx, name in enumerate(nameArray):
         conditionArray = []
         for colname in colnames:
             if name in colname:
                 conditionArray.append(colname)
         myFig, ax = makeKDEPlot(conditionArray)
         if ax.lines:
-            myFig.savefig(name +".pdf")
-
+            myFig.savefig(str(idx) + name +".pdf")
 
     # find the longest lists
     maxListSize = 0;
@@ -182,7 +160,6 @@ def MegaAnalyze(colnames):
             if current_nm in lists:
                 Neuromast_List.append(lists[0] + "_" + current_nm)
 
-
     #make plots for each inidividual neuromast
     for i in range (1, maxListSize-1):
         myPlots = []
@@ -192,6 +169,9 @@ def MegaAnalyze(colnames):
         myFig, ax = makeKDEPlot(myPlots)
         if ax.lines:
             myFig.savefig("L" + str(i) + ".pdf")
+            statPlot = doStats(myPlots)
+            statPlot.savefig("L" + str(i) + "_stats.pdf")
+        print(myPlots)
 
     #get the terminal neuromasts
     terminal_array = []
@@ -200,29 +180,32 @@ def MegaAnalyze(colnames):
     myFig, ax = makeKDEPlot(terminal_array)
     if ax.lines:
         myFig.savefig("TNM.pdf")
+        statPlot = doStats(myPlots)
+        statPlot.savefig("TNM_stats.pdf")
 
-#TODO: add a table with statistics
-#TODO: distance between nm for each condition
     merge_PDF()
 
 
 
-    #plot each one individually
-    #loop through nm, plotting each individually
-    #get average distance between each nm and plot it
-    #get total number of neuromasts and plot them
-
-    #myMatrix = getConditions(colnames):
+def countNM():
+    print("counting neuromasts!")
 
 
+https://stackoverflow.com/questions/40583482/getting-last-non-na-value-across-rows-in-a-pandas-dataframe
 
+# def f(x):
+#     if x.last_valid_index() is None:
+#         return np.nan
+#     else:
+#         return x[x.last_valid_index()]  ####except here we're returning the index value (L1, L2, L3) From there we'll extract the number as the count
+#
+# df['status'] = df.apply(f, axis=1)
 
 
 
 def getConditions(colnames):
     nameArray = []
     for name in colnames:
-        #print(name.split('_')[0])
         if name.split('_')[0] not in nameArray:
             nameArray.append(name.split('_')[0])
 
@@ -256,9 +239,6 @@ root.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select fil
 myData = pd.read_csv(root.filename, encoding='utf-8-sig')
 colNames = myData.columns.tolist()
 
-#toolbar = NavigationToolbar2Tk(canvas, root)
-#toolbar.update()
-#canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
 
 
 
@@ -277,6 +257,8 @@ b_clear.pack()
 b_test = Button(text="Mega Analysis!", command = lambda arg = colNames : MegaAnalyze(colNames))
 b_test.pack()
 
+b_clear = Button(text="Test", command = myTest)
+b_clear.pack()
 
 
 # Create a Tkinter variable
