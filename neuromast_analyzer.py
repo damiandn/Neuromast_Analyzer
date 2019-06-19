@@ -122,6 +122,25 @@ def doStats(values = myTestValues):
                  #T.insert(END, myString)
             #print(idx + " vs " + indx + "                      "+ str(round(scipy.stats.ks_2samp(x, y)[1], 5)))
 
+def doStats():
+    #fig, ax = plt.subplots()
+    #df = pd.DataFrame(np.random.randn(10, 4), columns=list('ABCD'))
+    #ax.table(cellText=df.values, colLabels=df.columns, loc='center')
+    #fig.tight_layout()
+    #plt.show()
+
+    df = pd.DataFrame(columns=values)
+
+    for idx in values:
+         statRowArray = []
+         x = myData.loc[:,idx].dropna()
+         for indx in values:
+             y = myData.loc[:,indx].dropna()
+             pvalue = scipy.stats.ttest_ind(x, y)[1]
+             pvalue_round = round(pvalue, 5)
+             statRowArray.append(pvalue_round)
+         df.loc[len(df)] = statRowArray
+    print(df)
 
     # statwin = Toplevel(root)
     # display = Label(statwin, text="Statistics")
