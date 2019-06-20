@@ -1,7 +1,8 @@
 
 #TODO: Plot limits
 #TODO: get average distance between each nm and plot it
-
+#TODO: fix colors for neuromasts to deal with different numbers (TNM always same color)
+#TODO: Statistics for nm number
 
 
 
@@ -72,7 +73,7 @@ def quitUI():
 
 def makeList():
     values = [listbox.get(idx) for idx in listbox.curselection()]
-    myFig, ax = makeKDEPlot(values)
+    myFig, ax = makeKDEPlot(values, "title")
 
     newwin = Toplevel(root)
     display = Label(newwin, text="Plot")
@@ -92,8 +93,8 @@ def myTest():
 
 def makeBoxAndWhiskerPlot(Neuromast_DataFrame, nameArray):
 
-    print(Neuromast_DataFrame)
-    print(nameArray)
+    #print(Neuromast_DataFrame)
+    #print(nameArray)
     f, ax = plt.subplots(figsize=(22, 6))
     #sns.boxplot(x="variable", data=Neuromast_DataFrame.melt(Neuromast_DataFrame))
     #
@@ -115,15 +116,15 @@ def makeBoxAndWhiskerPlot(Neuromast_DataFrame, nameArray):
     #sns.boxplot(Neuromast_DataFrame[nameArray].dropna())
     return f, ax
 
-def doStats(values):
+def doStats(values, my_dataframe):
     df = pd.DataFrame(columns=values)
     df.set_index(values)
     print(type(df.index))
     for idx in values:
          statRowArray = []
-         x = myData.loc[:,idx].dropna()
+         x = my_dataframe.loc[:,idx]#.dropna()
          for indx in values:
-             y = myData.loc[:,indx].dropna()
+             y = my_dataframe.loc[:,indx]#.dropna()
              pvalue = scipy.stats.ttest_ind(x, y)[1]
              pvalue_round = round(pvalue, 5)
              statRowArray.append(pvalue_round)
@@ -209,13 +210,20 @@ def MegaAnalyze(colnames):
         neuromastNumberArray[condition] = tempSeries.values
     neuromastNumberArray[neuromastNumberArray < 0] = np.nan
     neuromastNumberArray = neuromastNumberArray.astype(float)
-    neuromastNumberArray = neuromastNumberArray.dropna()
-    print(neuromastNumberArray)
+    #print("neuromast Array before dropna()")
+    #print(neuromastNumberArray)
+    #neuromastNumberArray = neuromastNumberArray.dropna()
+    #print("neuromastArray = ")
+    #print(neuromastNumberArray)
     Fig, ax = makeBoxAndWhiskerPlot(neuromastNumberArray, nameArray)
     filename = str(graph_index) +  "_neuromast_number.pdf"
     Fig.savefig(filename)
     file_list.append(filename)
     graph_index = graph_index + 1
+    statPlot = doStats(nameArray, neuromastNumberArray)
+    filename = str(graph_index)  + "nmnumber_stats.pdf"
+    statPlot.savefig(filename)
+
 
 
     # find the longest lists
@@ -245,7 +253,7 @@ def MegaAnalyze(colnames):
             myFig.savefig(filename)
             file_list.append(filename)
             graph_index = graph_index + 1
-            statPlot = doStats(myPlots)
+            statPlot = doStats(myPlots, myData)
             filename = str(graph_index)  + "_L" + str(i) + "_stats.pdf"
             statPlot.savefig(filename)
             file_list.append(filename)
@@ -262,7 +270,7 @@ def MegaAnalyze(colnames):
         myFig.savefig(filename)
         file_list.append(filename)
         graph_index = graph_index + 1
-        statPlot = doStats(terminal_array)
+        statPlot = doStats(terminal_array, myData)
         filename = str(graph_index) + "_TNM_stats.pdf"
         statPlot.savefig(filename)
         file_list.append(filename)
