@@ -1,7 +1,9 @@
 
 #TODO: Plot limits
 #TODO: get average distance between each nm and plot it
-#TODO: get total number of neuromasts and plot them
+#TODO: titles and axes on all plots
+#TODO: fix plot order after merging
+#TODO: stats for terminal Cluster
 
 
 
@@ -83,6 +85,31 @@ def myTest():
     print("test")
 
 
+def makeBoxAndWhiskerPlot(Neuromast_DataFrame, nameArray):
+
+    print(Neuromast_DataFrame)
+    print(nameArray)
+    f, ax = plt.subplots(figsize=(22, 6))
+    #sns.boxplot(x="variable", data=Neuromast_DataFrame.melt(Neuromast_DataFrame))
+    #
+
+    newdf = pd.melt(Neuromast_DataFrame, value_vars=nameArray)
+
+    nm_plot=sns.boxplot(x="variable", y="value", data=newdf, color='lightgrey')
+    nm_plot=sns.swarmplot(x='variable', y='value',
+              data=newdf,
+              color='black',
+              alpha=0.75)
+
+    ax.set_title("Number of Neuromasts, Excluding Terminal Cluster")
+    ax.set_ylabel("Number of Non-Terminal Neuromasts")
+    ax.set_xlabel("Condition")
+
+    #sns.boxplot(Neuromast_DataFrame[['DMSO', '1uM', '5uM']])
+    #plt.show()
+    #sns.boxplot(Neuromast_DataFrame[nameArray].dropna())
+    return f, ax
+
 def doStats(values):
     df = pd.DataFrame(columns=values)
     df.set_index(values)
@@ -133,9 +160,6 @@ def MegaAnalyze(colnames):
 
     myMatrix, nameArray = getConditions(colnames)
 
-    #get each condition as an individual plots (this is wrong because it will find 15uM when looking for 5uM and append both)
-
-    #lets instead make a dataframe for each condition and use that to print. C
 
     #print(colnames)
     for idx, condition in enumerate(nameArray):
@@ -143,10 +167,27 @@ def MegaAnalyze(colnames):
         for colname in colnames:
             if colname.split('_')[0] == condition:
                 myList.append(colname)
-        print(myList)
         myFig, ax = makeKDEPlot(myList)
         if ax.lines:
-            myFig.savefig(str(idx) + condition +".pdf")
+           myFig.savefig(str(idx) + condition +".pdf")
+
+    #make plot of number of nm
+
+    neuromastNumberArray = pd.DataFrame()
+    for idx, condition in enumerate(nameArray):
+        myList = []
+        for colname in colnames:
+            if colname.split('_')[0] == condition:
+                myList.append(colname)
+        tempList = (countNM(myList))
+        tempSeries = pd.Series(tempList)
+        neuromastNumberArray[condition] = tempSeries.values
+    neuromastNumberArray[neuromastNumberArray < 0] = np.nan
+    neuromastNumberArray = neuromastNumberArray.astype(float)
+    neuromastNumberArray = neuromastNumberArray.dropna()
+    print(neuromastNumberArray)
+    Fig, ax = makeBoxAndWhiskerPlot(neuromastNumberArray, nameArray)
+    Fig.savefig("neuromast_number.pdf")
 
 
 
@@ -172,23 +213,23 @@ def MegaAnalyze(colnames):
             if "L" + str(i) in nm:
                 myPlots.append(nm)
         myFig, ax = makeKDEPlot(myPlots)
-#        if ax.lines:
-#            myFig.savefig("L" + str(i) + ".pdf")
-#            statPlot = doStats(myPlots)
-#            statPlot.savefig("L" + str(i) + "_stats.pdf")
-#        print(myPlots)
+        if ax.lines:
+            myFig.savefig("L" + str(i) + ".pdf")
+            statPlot = doStats(myPlots)
+            statPlot.savefig("L" + str(i) + "_stats.pdf")
+        print(myPlots)
 
     #get the terminal neuromasts
     terminal_array = []
     for condition in nameArray:
         terminal_array.append(condition + "_TNM")
     myFig, ax = makeKDEPlot(terminal_array)
-    #if ax.lines:
-    #    myFig.savefig("TNM.pdf")
-#        statPlot = doStats(myPlots)
-#        statPlot.savefig("TNM_stats.pdf")
+    if ax.lines:
+        myFig.savefig("TNM.pdf")
+        statPlot = doStats(myPlots)
+        statPlot.savefig("TNM_stats.pdf")
 
-#    merge_PDF()
+    merge_PDF()
 
 
 
@@ -201,14 +242,11 @@ def countNM(colnames):
     df2 = pd.DataFrame()
     for name in colnames:
         df2[name] = myData[name]
-    print(df2)
-
-    return (df2.count(axis=1))
-    #df2['number'] = (df2.count(axis=1))
     #print(df2)
 
-
-
+    return (df2.count(axis=1)-1)
+    #df2['number'] = (df2.count(axis=1))
+    #print(df2)
 
 
 def getConditions(colnames):
