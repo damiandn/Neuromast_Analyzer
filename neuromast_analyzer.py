@@ -46,6 +46,7 @@ colorArray = [(0.6313725490196078, 0.788235294117647, 0.9568627450980393),
 lineStyleArray = ["-", "-", "-","-", "-", "-","-", "-", "-","-"]
 
 
+
 def makeKDEPlot(dataArray, cols = colorArray, lines = lineStyleArray):
 
     plt.close()
@@ -138,18 +139,35 @@ def doStats(values):
 
 
 
-def merge_PDF():
+def merge_PDF(filelist):
+
+
+
     pdf_merger = PdfFileMerger()
     file_handles = []
     print(os.getcwd())
     input_paths = (glob.glob(os.getcwd() + "/*.pdf"))
-    for path in input_paths:
+
+    #myFiles = []
+
+    #for filename in os.listdir(os.getcwd()):
+    #    if filename.endswith('.pdf'):
+    #        myFiles.append(filename)
+
+    print(filelist)
+
+    for path in filelist:
         pdf_merger.append(path)
+
+
 
     with open("merge.pdf", 'wb') as fileobj:
         pdf_merger.write(fileobj)
 
 def MegaAnalyze(colnames):
+
+    file_list = []
+    graph_index = 0;
 
     time = dt.datetime.now();
     timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
@@ -169,8 +187,11 @@ def MegaAnalyze(colnames):
                 myList.append(colname)
         myFig, ax = makeKDEPlot(myList)
         if ax.lines:
-           myFig.savefig(str(idx) + condition +".pdf")
-
+            filename = str(graph_index) + "_" + condition + ".pdf"
+            print(filename)
+            myFig.savefig(filename)
+            file_list.append(filename)
+            graph_index = graph_index + 1
     #make plot of number of nm
 
     neuromastNumberArray = pd.DataFrame()
@@ -187,8 +208,10 @@ def MegaAnalyze(colnames):
     neuromastNumberArray = neuromastNumberArray.dropna()
     print(neuromastNumberArray)
     Fig, ax = makeBoxAndWhiskerPlot(neuromastNumberArray, nameArray)
-    Fig.savefig("neuromast_number.pdf")
-
+    filename = str(graph_index) +  "_neuromast_number.pdf"
+    Fig.savefig(filename)
+    file_list.append(filename)
+    graph_index = graph_index + 1
 
 
     # find the longest lists
@@ -214,9 +237,15 @@ def MegaAnalyze(colnames):
                 myPlots.append(nm)
         myFig, ax = makeKDEPlot(myPlots)
         if ax.lines:
-            myFig.savefig("L" + str(i) + ".pdf")
+            filename = str(graph_index) + "_L" + str(i) + ".pdf"
+            myFig.savefig(filename)
+            file_list.append(filename)
+            graph_index = graph_index + 1
             statPlot = doStats(myPlots)
-            statPlot.savefig("L" + str(i) + "_stats.pdf")
+            filename = str(graph_index)  + "_L" + str(i) + "_stats.pdf"
+            statPlot.savefig(filename)
+            file_list.append(filename)
+            graph_index = graph_index + 1
         print(myPlots)
 
     #get the terminal neuromasts
@@ -225,11 +254,17 @@ def MegaAnalyze(colnames):
         terminal_array.append(condition + "_TNM")
     myFig, ax = makeKDEPlot(terminal_array)
     if ax.lines:
-        myFig.savefig("TNM.pdf")
-        statPlot = doStats(myPlots)
-        statPlot.savefig("TNM_stats.pdf")
+        filename = str(graph_index) + "_TNM.pdf"
+        myFig.savefig(filename)
+        file_list.append(filename)
+        graph_index = graph_index + 1
+        statPlot = doStats(terminal_array)
+        filename = str(graph_index) + "_TNM_stats.pdf"
+        statPlot.savefig(filename)
+        file_list.append(filename)
+        graph_index = graph_index + 1
 
-    merge_PDF()
+    merge_PDF(file_list)
 
 
 
