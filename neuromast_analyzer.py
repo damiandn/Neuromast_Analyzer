@@ -1,9 +1,6 @@
 
 #TODO: Plot limits
 #TODO: get average distance between each nm and plot it
-#TODO: titles and axes on all plots
-#TODO: fix plot order after merging
-#TODO: stats for terminal Cluster
 
 
 
@@ -47,7 +44,7 @@ lineStyleArray = ["-", "-", "-","-", "-", "-","-", "-", "-","-"]
 
 
 
-def makeKDEPlot(dataArray, cols = colorArray, lines = lineStyleArray):
+def makeKDEPlot(dataArray, title, cols = colorArray, lines = lineStyleArray):
 
     plt.close()
 
@@ -60,6 +57,13 @@ def makeKDEPlot(dataArray, cols = colorArray, lines = lineStyleArray):
             sns.kdeplot(myData[idx].dropna(), bw=100, color=col, label=idx, linestyle=line, lw=3)
             plt.xlim(0, 2500)
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+
+    ax.set_title(title)
+    ax.set_ylabel("Probability")
+    ax.set_xlabel("Neuromast Distance from Otic Vesicle (um)")
+
+
+
     return f, ax
 
 def quitUI():
@@ -185,15 +189,15 @@ def MegaAnalyze(colnames):
         for colname in colnames:
             if colname.split('_')[0] == condition:
                 myList.append(colname)
-        myFig, ax = makeKDEPlot(myList)
+        myFig, ax = makeKDEPlot(myList, condition)
         if ax.lines:
             filename = str(graph_index) + "_" + condition + ".pdf"
-            print(filename)
             myFig.savefig(filename)
             file_list.append(filename)
             graph_index = graph_index + 1
-    #make plot of number of nm
 
+
+    #make plot of number of nm
     neuromastNumberArray = pd.DataFrame()
     for idx, condition in enumerate(nameArray):
         myList = []
@@ -235,7 +239,7 @@ def MegaAnalyze(colnames):
         for nm in Neuromast_List:
             if "L" + str(i) in nm:
                 myPlots.append(nm)
-        myFig, ax = makeKDEPlot(myPlots)
+        myFig, ax = makeKDEPlot(myPlots, "L" + str(i))
         if ax.lines:
             filename = str(graph_index) + "_L" + str(i) + ".pdf"
             myFig.savefig(filename)
@@ -252,7 +256,7 @@ def MegaAnalyze(colnames):
     terminal_array = []
     for condition in nameArray:
         terminal_array.append(condition + "_TNM")
-    myFig, ax = makeKDEPlot(terminal_array)
+    myFig, ax = makeKDEPlot(terminal_array, "Terminal Neuromast Cluster")
     if ax.lines:
         filename = str(graph_index) + "_TNM.pdf"
         myFig.savefig(filename)
@@ -319,7 +323,8 @@ mainframe.pack(pady = 0, padx = 0)
 #root.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
 #myData = pd.read_csv(root.filename, encoding='utf-8-sig')
 
-myData = pd.read_csv("C:/Users/damia/github/Neuromast_Analyzer/Ck66_Compiled Data.csv")
+#myData = pd.read_csv("C:/Users/damia/github/Neuromast_Analyzer/Ck66_Compiled Data.csv", encoding='utf-8-sig')
+myData = pd.read_csv("C:/Users/dalledam/neuromast_analyzer/Ck66_Compiled Data.csv",encoding='utf-8-sig')
 
 colNames = myData.columns.tolist()
 
