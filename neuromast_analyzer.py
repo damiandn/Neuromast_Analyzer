@@ -2,8 +2,6 @@
 #TODO: Plot limits
 #TODO: get average distance between each nm and plot it
 #TODO: titles and axes on all plots
-#TODO: fix plot order after merging
-#TODO: stats for terminal Cluster
 
 
 
