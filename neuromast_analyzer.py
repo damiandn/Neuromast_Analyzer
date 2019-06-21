@@ -1,13 +1,7 @@
 
 #TODO: Plot limits
 #TODO: get average distance between each nm and plot it
-<<<<<<< HEAD
-#TODO: titles and axes on all plots
-
-=======
 #TODO: fix colors for neuromasts to deal with different numbers (TNM always same color)
-#TODO: Statistics for nm number
->>>>>>> f766a27f231557fdfa4276047bb8cfdbab0a67ff
 
 
 
@@ -124,12 +118,11 @@ def makeBoxAndWhiskerPlot(Neuromast_DataFrame, nameArray):
 def doStats(values, my_dataframe):
     df = pd.DataFrame(columns=values)
     df.set_index(values)
-    print(type(df.index))
     for idx in values:
          statRowArray = []
-         x = my_dataframe.loc[:,idx]#.dropna()
+         x = my_dataframe.loc[:,idx].dropna()
          for indx in values:
-             y = my_dataframe.loc[:,indx]#.dropna()
+             y = my_dataframe.loc[:,indx].dropna()
              pvalue = scipy.stats.ttest_ind(x, y)[1]
              pvalue_round = round(pvalue, 5)
              statRowArray.append(pvalue_round)
@@ -151,11 +144,8 @@ def doStats(values, my_dataframe):
 
 def merge_PDF(filelist):
 
-
-
     pdf_merger = PdfFileMerger()
     file_handles = []
-    print(os.getcwd())
     input_paths = (glob.glob(os.getcwd() + "/*.pdf"))
 
     #myFiles = []
@@ -163,8 +153,6 @@ def merge_PDF(filelist):
     #for filename in os.listdir(os.getcwd()):
     #    if filename.endswith('.pdf'):
     #        myFiles.append(filename)
-
-    print(filelist)
 
     for path in filelist:
         pdf_merger.append(path)
@@ -226,8 +214,10 @@ def MegaAnalyze(colnames):
     file_list.append(filename)
     graph_index = graph_index + 1
     statPlot = doStats(nameArray, neuromastNumberArray)
-    filename = str(graph_index)  + "nmnumber_stats.pdf"
+    filename = str(graph_index)  + "_nmnumber_stats.pdf"
+    graph_index = graph_index + 1
     statPlot.savefig(filename)
+    file_list.append(filename)
 
 
 
@@ -263,7 +253,7 @@ def MegaAnalyze(colnames):
             statPlot.savefig(filename)
             file_list.append(filename)
             graph_index = graph_index + 1
-        print(myPlots)
+        #print(myPlots)
 
     #get the terminal neuromasts
     terminal_array = []
@@ -336,8 +326,8 @@ mainframe.pack(pady = 0, padx = 0)
 #root.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
 #myData = pd.read_csv(root.filename, encoding='utf-8-sig')
 
-#myData = pd.read_csv("C:/Users/damia/github/Neuromast_Analyzer/Ck66_Compiled Data.csv", encoding='utf-8-sig')
-myData = pd.read_csv("C:/Users/dalledam/neuromast_analyzer/Ck66_Compiled Data.csv",encoding='utf-8-sig')
+myData = pd.read_csv("C:/Users/damia/github/Neuromast_Analyzer/Ck66_Compiled Data.csv", encoding='utf-8-sig')
+#myData = pd.read_csv("C:/Users/dalledam/neuromast_analyzer/Ck66_Compiled Data.csv",encoding='utf-8-sig')
 
 colNames = myData.columns.tolist()
 
