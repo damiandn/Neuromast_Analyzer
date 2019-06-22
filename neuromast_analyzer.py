@@ -42,11 +42,16 @@ colorArray = [(0.6313725490196078, 0.788235294117647, 0.9568627450980393),
 #default line styles
 lineStyleArray = ["-", "-", "-","-", "-", "-","-", "-", "-","-"]
 
+#colNames=[]
+#colnames=[]
+#myData=[]
 
+#myData = pd.read_csv("test3.csv", encoding='utf-8-sig')
+#colNames = myData.columns.tolist()
 
 def makeKDEPlot(dataArray, title, cols = colorArray, lines = lineStyleArray):
 
-    plt.close()
+    #plt.close()
 
     f, ax = plt.subplots(figsize=(22, 6))
 
@@ -72,16 +77,26 @@ def quitUI():
 
 def makeList():
     values = [listbox.get(idx) for idx in listbox.curselection()]
+    print(values)
     myFig, ax = makeKDEPlot(values, "title")
 
     newwin = Toplevel(root)
     display = Label(newwin, text="Plot")
-
     canvas = FigureCanvasTkAgg(myFig, master=newwin)  # A tk.DrawingArea.
     canvas.draw()
     canvas.get_tk_widget().pack()
-    toolbar = NavigationToolbar2Tk(canvas, root)
-    canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
+
+
+    statwin = Toplevel(root)
+    myStatFig = statPlot = doStats(values, myData)
+    display = Label(newwin, text="Statistics")
+    canvas = FigureCanvasTkAgg(myStatFig, master=statwin)  # A tk.DrawingArea.
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+
+
+    #toolbar = NavigationToolbar2Tk(canvas, root)
+    #canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
 
 def clearList():
     listbox.selection_clear(0, END)
@@ -162,7 +177,7 @@ def merge_PDF(filelist):
     with open("merge.pdf", 'wb') as fileobj:
         pdf_merger.write(fileobj)
 
-def MegaAnalyze(colnames):
+def MegaAnalyze(colnames, dataframe):
 
     file_list = []
     graph_index = 0;
@@ -173,6 +188,7 @@ def MegaAnalyze(colnames):
     os.mkdir(path + "\\output_" + timestamp)
     savePath = path + "\\output_" + timestamp
     os.chdir(savePath)
+
 
     myMatrix, nameArray = getConditions(colnames)
 
@@ -189,7 +205,7 @@ def MegaAnalyze(colnames):
             myFig.savefig(filename)
             file_list.append(filename)
             graph_index = graph_index + 1
-
+            plt.close()
 
     #make plot of number of nm
     neuromastNumberArray = pd.DataFrame()
@@ -203,11 +219,7 @@ def MegaAnalyze(colnames):
         neuromastNumberArray[condition] = tempSeries.values
     neuromastNumberArray[neuromastNumberArray < 0] = np.nan
     neuromastNumberArray = neuromastNumberArray.astype(float)
-    #print("neuromast Array before dropna()")
-    #print(neuromastNumberArray)
-    #neuromastNumberArray = neuromastNumberArray.dropna()
-    #print("neuromastArray = ")
-    #print(neuromastNumberArray)
+
     Fig, ax = makeBoxAndWhiskerPlot(neuromastNumberArray, nameArray)
     filename = str(graph_index) +  "_neuromast_number.pdf"
     Fig.savefig(filename)
@@ -218,6 +230,7 @@ def MegaAnalyze(colnames):
     graph_index = graph_index + 1
     statPlot.savefig(filename)
     file_list.append(filename)
+    plt.close()
 
 
 
@@ -253,6 +266,7 @@ def MegaAnalyze(colnames):
             statPlot.savefig(filename)
             file_list.append(filename)
             graph_index = graph_index + 1
+            plt.close()
         #print(myPlots)
 
     #get the terminal neuromasts
@@ -270,6 +284,7 @@ def MegaAnalyze(colnames):
         statPlot.savefig(filename)
         file_list.append(filename)
         graph_index = graph_index + 1
+        plt.close()
 
     merge_PDF(file_list)
 
@@ -308,11 +323,25 @@ def getConditions(colnames):
         myMatrix.append(myNewList)
     return myMatrix, nameArray
 
+def openfile():
+    listbox.delete(0,'end')
+    root.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
+    myData = pd.read_csv(root.filename, encoding='utf-8-sig')
+    colNames = myData.columns.tolist()
+    for item in colNames:
+        listbox.insert(END, item)
+    print(myData)
+    print(colNames)
 
+def initialize():
+    myData = pd.read_csv("Ck66_Compiled Data.csv", encoding='utf-8-sig')
+    colNames = myData.columns.tolist()
 
 
 dataToPlot = []
 myFig = None;
+
+
 
 
 root = Tk()
@@ -323,40 +352,50 @@ mainframe.columnconfigure(0, weight = 1)
 mainframe.rowconfigure(0, weight = 1)
 mainframe.pack(pady = 0, padx = 0)
 
-#root.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
-#myData = pd.read_csv(root.filename, encoding='utf-8-sig')
-
-myData = pd.read_csv("C:/Users/damia/github/Neuromast_Analyzer/Ck66_Compiled Data.csv", encoding='utf-8-sig')
-#myData = pd.read_csv("C:/Users/dalledam/neuromast_analyzer/Ck66_Compiled Data.csv",encoding='utf-8-sig')
-
+root.filename =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
+myData = pd.read_csv(root.filename, encoding='utf-8-sig')
 colNames = myData.columns.tolist()
+#print(myData)
+
+#myData = pd.read_csv("C:/Users/damia/github/Neuromast_Analyzer/test_data.csv", encoding='utf-8-sig')
+#print(myData)
+#myData = pd.read_csv("C:/Users/dalledam/neuromast_analyzer/Ck66_Compiled Data.csv",encoding='utf-8-sig')
+#myData = pd.read_csv("C:/Users/damia/github/Neuromast_Analyzer/Ck66_Compiled Data.csv", encoding='utf-8-sig')
+
+#myData = pd.read_csv("test_data.csv", encoding='utf-8-sig')
+
+root.after(100, initialize)
 
 
 
 
-b_quit = Button(root, text="Quit", command=quitUI)
-b_quit.pack()
+root.configure(background='black')
 
-b_stats = Button(root, text="Run Statistics", command = doStats)
-b_stats.pack()
 
-b_gen = Button(text="Generate Plot", command = makeList)
-b_gen.pack()
+b_quit = Button(root, text="Quit", bg="grey30", fg="white", command=quitUI)
+b_quit.pack(fill=X, padx=10, pady=5)
 
-b_clear = Button(text="Clear Selection", command = clearList)
-b_clear.pack()
+b_clear = Button(text="Open File", bg="grey30", fg="white", command = openfile)
+b_clear.pack(fill=X, padx=10, pady=5)
 
-b_test = Button(text="Mega Analysis!", command = lambda arg = colNames : MegaAnalyze(colNames))
-b_test.pack()
+#b_stats = Button(root, text="Run Statistics", bg="grey24", fg="white", command = doStats)
+#b_stats.pack(fill=X)
 
-b_clear = Button(text="Test", command = countNM)
-b_clear.pack()
+b_gen = Button(text="Generate Plot", bg="grey30", fg="white", command = makeList)
+b_gen.pack(fill=X, padx=10, pady=5)
+
+b_clear = Button(text="Clear Selection", bg="grey30", fg="white", command = clearList)
+b_clear.pack(fill=X, padx=10, pady=5)
+
+b_test = Button(text="Mega Analysis!", bg="grey30", fg="white", command = lambda arg1 = colNames, arg2 = myData : MegaAnalyze(arg1, arg2))
+b_test.pack(fill=X, padx=10, pady=5)
+
 
 
 # Create a Tkinter variable
 tkvar = StringVar(root)
 
-listbox = Listbox(root, selectmode=MULTIPLE, height = 20)
+listbox = Listbox(root, selectmode=MULTIPLE, height = 20, bg="black", fg="white")
 listbox.pack()
 
 
@@ -364,6 +403,7 @@ listbox.pack()
 for item in colNames:
     listbox.insert(END, item)
 
+print(myData)
 
 
 
